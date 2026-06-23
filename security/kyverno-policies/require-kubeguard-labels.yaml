@@ -1,0 +1,27 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: kubeguard-require-labels
+  annotations:
+    policies.kyverno.io/title: Require KubeGuard Labels
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-app-and-project-labels
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - kubeguard
+      validate:
+        message: "KubeGuard pods must include app and project labels."
+        pattern:
+          metadata:
+            labels:
+              app: "?*"
+              project: "?*"

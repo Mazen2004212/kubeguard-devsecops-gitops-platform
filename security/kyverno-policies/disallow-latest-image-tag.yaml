@@ -1,0 +1,26 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: kubeguard-disallow-latest-image-tag
+  annotations:
+    policies.kyverno.io/title: Disallow Latest Image Tag
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: high
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: disallow-latest-image-tag
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - kubeguard
+      validate:
+        message: "Containers must not use the latest image tag."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"
