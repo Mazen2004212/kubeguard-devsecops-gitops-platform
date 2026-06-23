@@ -1,0 +1,52 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kubeguard-alert-rules
+  namespace: monitoring
+  labels:
+    release: monitoring
+    role: alert-rules
+    app: kube-prometheus-stack
+spec:
+  groups:
+    - name: kubeguard.rules
+      rules:
+        - alert: KubeGuardTargetDown
+          expr: up{job="kubeguard-app", namespace="kubeguard"} == 0
+          for: 1m
+          labels:
+            severity: critical
+            project: kubeguard
+          annotations:
+            summary: "KubeGuard application target is down"
+            description: "Prometheus cannot scrape one or more KubeGuard application targets for more than 1 minute."
+
+        - alert: KubeGuardHighErrorRate
+          expr: sum(rate(kubeguard_http_requests_total{namespace="kubeguard", status=~"5.."}[1m])) > 0.1
+          for: 30s
+          labels:
+            severity: warning
+            project: kubeguard
+          annotations:
+            summary: "KubeGuard high HTTP 5xx error rate"
+            description: "KubeGuard is returning HTTP 5xx errors above the configured threshold."
+
+        - alert: KubeGuardHighLatencyP95
+          expr: histogram_quantile(0.95, sum by (le, exported_endpoint) (rate(kubeguard_http_request_duration_seconds_bucket{namespace="kubeguard"}[2m]))) > 0.3
+          for: 30s
+          labels:
+            severity: warning
+            project: kubeguard
+          annotations:
+            summary: "KubeGuard high P95 latency"
+            description: "KubeGuard P95 request latency is higher than 300ms for at least one endpoint."
+
+        - alert: KubeGuardHighRequestRateDemo
+          expr: sum(rate(kubeguard_http_requests_total{namespace="kubeguard"}[1m])) > 1
+          for: 30s
+          labels:
+            severity: info
+            project: kubeguard
+          annotations:
+            summary: "KubeGuard high request rate demo alert"
+            description: "KubeGuard is receiving more than 1 request per second. This alert is used to demonstrate alerting behavior."

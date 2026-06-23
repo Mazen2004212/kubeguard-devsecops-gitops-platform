@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kubeguard-app-servicemonitor
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - kubeguard
+  selector:
+    matchLabels:
+      app: kubeguard-app
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
