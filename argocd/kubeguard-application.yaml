@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubeguard-app
+  namespace: argocd
+  labels:
+    project: kubeguard
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/Mazen2004212/kubeguard-devsecops-gitops-platform.git
+    targetRevision: main
+    path: helm/kubeguard-app
+    helm:
+      valueFiles:
+        - values.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kubeguard
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
