@@ -10,3 +10,9 @@ loki:
 
 promtail:
   enabled: true
+  image:
+    repository: grafana/promtail
+    tag: 2.9.3
+  config:
+    clients:
+      - url: http://logging-loki:3100/loki/api/v1/push
