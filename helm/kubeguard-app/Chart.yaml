@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kubeguard-app
+description: KubeGuard demo application Helm chart for GitOps, monitoring, logging, alerting, and security demos
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

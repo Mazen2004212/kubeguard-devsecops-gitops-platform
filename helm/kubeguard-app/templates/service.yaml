@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubeguard-app
+  labels:
+    app: kubeguard-app
+    project: kubeguard
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: kubeguard-app
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
