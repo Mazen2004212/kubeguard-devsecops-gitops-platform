@@ -1,0 +1,4 @@
+﻿image:
+  repository: 766696030212.dkr.ecr.us-east-1.amazonaws.com/kubeguard-demo-app
+  tag: bddda69
+  pullPolicy: IfNotPresent
