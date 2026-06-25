@@ -89,7 +89,7 @@ jobs:
             --set image.tag="$IMAGE_TAG" \
             --set image.pullPolicy=IfNotPresent \
             --wait \
-            --timeout 5m
+            --timeout 10m
 
       - name: Verify Kubernetes rollout
         run: |
@@ -104,7 +104,7 @@ jobs:
 
           echo "LoadBalancer hostname: $LB_HOST"
 
-          for i in {1..12}; do
+          for i in {1..30}; do
             if curl -fsS "http://$LB_HOST/health"; then
               echo "Health check passed"
               curl -fsS "http://$LB_HOST/ready"
