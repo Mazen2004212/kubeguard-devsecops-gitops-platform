@@ -495,6 +495,10 @@ Allowed or Denied Workload
 
 ### GitHub Actions CI Quality Gates
 
+#### GitHub Actions EKS Deployment Success
+
+![GitHub Actions EKS Deploy Success](screenshots/github-actions-eks-deploy-success.png)
+
 #### GitHub Actions CI Success
 
 ![GitHub Actions KubeGuard CI Success](screenshots/github-actions-kubeguard-ci-success.png)
