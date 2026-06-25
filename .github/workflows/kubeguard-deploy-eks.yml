@@ -89,7 +89,7 @@ jobs:
             --set image.tag="$IMAGE_TAG" \
             --set image.pullPolicy=IfNotPresent \
             --wait \
-            --timeout 10m
+            --timeout 15m
 
       - name: Verify Kubernetes rollout
         run: |
