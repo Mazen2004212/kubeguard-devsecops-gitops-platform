@@ -12,14 +12,14 @@
 ![Grafana](https://img.shields.io/badge/Grafana-Dashboards-F46800?style=for-the-badge\&logo=grafana\&logoColor=white)
 ![Loki](https://img.shields.io/badge/Loki-Logging-F46800?style=for-the-badge\&logo=grafana\&logoColor=white)
 ![Kyverno](https://img.shields.io/badge/Kyverno-Policy_Enforcement-326CE5?style=for-the-badge\&logo=kubernetes\&logoColor=white)
-![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI_Quality_Gates-2088FF?style=for-the-badge\&logo=githubactions\&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-2088FF?style=for-the-badge\&logo=githubactions\&logoColor=white)
 ![Trivy](https://img.shields.io/badge/Trivy-Security_Scanning-1904DA?style=for-the-badge\&logo=aqua\&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Demo_App-009688?style=for-the-badge\&logo=fastapi\&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-Backend-3776AB?style=for-the-badge\&logo=python\&logoColor=white)
 
 KubeGuard is a production-style DevSecOps and GitOps Kubernetes platform built with FastAPI, Docker, Helm, Kubernetes, Argo CD, Prometheus, Grafana, Loki, Promtail, Kyverno, GitHub Actions, Trivy, Terraform, Amazon ECR, and Amazon EKS.
 
-The project demonstrates the complete operational lifecycle of a Kubernetes workload: containerization, Helm packaging, GitOps deployment, AWS EKS cloud deployment, immutable container image publishing, custom Prometheus metrics, Grafana dashboards, centralized logging, alerting, incident simulation, policy enforcement, HPA autoscaling, Terraform infrastructure provisioning, and CI quality gates.
+The project demonstrates the complete operational lifecycle of a Kubernetes workload: containerization, Helm packaging, GitOps deployment, AWS EKS cloud deployment, immutable container image publishing, custom Prometheus metrics, Grafana dashboards, centralized logging, alerting, incident simulation, policy enforcement, HPA autoscaling, Terraform infrastructure provisioning, ECR image publishing, and GitHub Actions CI/CD automation.
 
 ---
 
@@ -43,7 +43,7 @@ The project demonstrates the complete operational lifecycle of a Kubernetes work
 * [Kyverno Security Policies](#kyverno-security-policies)
 * [Argo CD GitOps](#argo-cd-gitops)
 * [Loki and Promtail Logging](#loki-and-promtail-logging)
-* [GitHub Actions CI Quality Gates](#github-actions-ci-quality-gates)
+* [GitHub Actions CI/CD](#github-actions-cicd)
 * [Terraform Infrastructure](#terraform-infrastructure)
 * [Project Structure](#project-structure)
 * [What This Project Demonstrates](#what-this-project-demonstrates)
@@ -52,6 +52,8 @@ The project demonstrates the complete operational lifecycle of a Kubernetes work
 * [Useful Commands](#useful-commands)
 * [Cost Control](#cost-control)
 * [CV Summary](#cv-summary)
+* [Resume Bullet Points](#resume-bullet-points)
+* [Author](#author)
 
 ---
 
@@ -77,15 +79,17 @@ The project demonstrates the complete operational lifecycle of a Kubernetes work
 * Installed Loki and Promtail for centralized Kubernetes logs.
 * Added a Grafana logs dashboard for KubeGuard application logs.
 * Added GitHub Actions CI workflow for Helm linting, template rendering, Docker build, and Trivy scans.
+* Added a GitHub Actions EKS deployment workflow using AWS OIDC authentication.
 * Created an Amazon ECR repository for the KubeGuard application image.
-* Built and pushed the Docker image to Amazon ECR using an immutable Git commit SHA tag.
+* Built and pushed the Docker image to Amazon ECR using immutable Git commit SHA tags.
 * Provisioned AWS infrastructure using Terraform.
 * Created an Amazon EKS cluster using Terraform.
 * Created an EKS managed node group using Free Tier eligible worker nodes.
 * Deployed KubeGuard to Amazon EKS using Helm and the ECR image.
 * Exposed KubeGuard publicly using an AWS LoadBalancer service.
 * Verified health, readiness, config, metrics, HPA, pods, services, and nodes on EKS.
-* Added proof screenshots for local Kubernetes, AWS EKS, ECR, Terraform, monitoring, alerting, logging, GitOps, security policies, CI quality gates, and Kubernetes operations.
+* Destroyed AWS resources after the demo to control cloud costs.
+* Added proof screenshots for local Kubernetes, AWS EKS, ECR, Terraform, monitoring, alerting, logging, GitOps, security policies, CI quality gates, EKS deployment workflow, and Kubernetes operations.
 
 ---
 
@@ -163,6 +167,32 @@ Public HTTP Access
     |-- /ready
     |-- /config
     |-- /metrics
+```
+
+### GitHub Actions EKS Deployment Architecture
+
+```text
+GitHub Actions
+    |
+    | OIDC authentication
+    v
+AWS IAM Role
+    |
+    | Temporary AWS credentials
+    v
+Amazon ECR
+    |
+    | Push Docker image tagged with Git SHA
+    v
+Amazon EKS
+    |
+    | helm upgrade --install
+    v
+KubeGuard Deployment
+    |
+    | Rollout verification
+    v
+AWS LoadBalancer Smoke Test
 ```
 
 ### Terraform AWS Infrastructure Architecture
@@ -263,7 +293,7 @@ Allowed or Denied Workload
 | Logging                | Loki, Promtail                                         |
 | Alerting               | PrometheusRule, Alertmanager                           |
 | Policy Enforcement     | Kyverno                                                |
-| CI Quality Gates       | GitHub Actions                                         |
+| CI/CD                  | GitHub Actions                                         |
 | Security Scanning      | Trivy                                                  |
 | Version Control        | Git, GitHub                                            |
 
@@ -493,15 +523,15 @@ Allowed or Denied Workload
 
 ---
 
-### GitHub Actions CI Quality Gates
-
-#### GitHub Actions EKS Deployment Success
-
-![GitHub Actions EKS Deploy Success](screenshots/github-actions-eks-deploy-success.png)
+### GitHub Actions CI/CD
 
 #### GitHub Actions CI Success
 
 ![GitHub Actions KubeGuard CI Success](screenshots/github-actions-kubeguard-ci-success.png)
+
+#### GitHub Actions EKS Deployment Success
+
+![GitHub Actions EKS Deploy Success](screenshots/github-actions-eks-deploy-success.png)
 
 ---
 
@@ -613,6 +643,7 @@ This upgrade moves the project from a local-only Kubernetes demo to a cloud-read
 * Exposed the application publicly using an AWS LoadBalancer service.
 * Verified application health, readiness, config, and metrics through the LoadBalancer.
 * Verified Kubernetes nodes, pods, services, HPA, and Terraform state.
+* Destroyed the AWS infrastructure after the demo to avoid ongoing cloud charges.
 
 ### ECR Image Registry
 
@@ -1161,9 +1192,11 @@ kubectl rollout status deployment monitoring-grafana -n monitoring
 
 ---
 
-## GitHub Actions CI Quality Gates
+## GitHub Actions CI/CD
 
-KubeGuard includes a GitHub Actions workflow that validates the project before changes are merged.
+KubeGuard includes GitHub Actions workflows for CI quality gates and optional cloud deployment.
+
+### CI Quality Gates Workflow
 
 Workflow file:
 
@@ -1171,7 +1204,7 @@ Workflow file:
 .github/workflows/kubeguard-ci.yml
 ```
 
-### Pipeline Stages
+Pipeline stages:
 
 * Checkout repository
 * Set up Helm
@@ -1181,7 +1214,35 @@ Workflow file:
 * Run Trivy filesystem scan
 * Run Trivy container image scan
 
-The pipeline provides CI quality gates for both Kubernetes manifests and container security.
+The CI pipeline validates Kubernetes manifests, Helm packaging, Docker build integrity, and container security posture.
+
+### EKS Deployment Workflow
+
+Workflow file:
+
+```text
+.github/workflows/kubeguard-deploy-eks.yml
+```
+
+KubeGuard also includes a manual GitHub Actions workflow for deploying the application to Amazon EKS.
+
+The workflow uses GitHub OIDC to assume an AWS IAM role without storing long-lived AWS access keys in GitHub secrets.
+
+Deployment stages:
+
+* Checkout repository
+* Configure AWS credentials using GitHub OIDC
+* Log in to Amazon ECR
+* Build Docker image
+* Tag image with the Git commit SHA
+* Push image to Amazon ECR
+* Validate Helm chart
+* Configure kubectl for Amazon EKS
+* Deploy to EKS using Helm
+* Verify Kubernetes rollout
+* Run LoadBalancer smoke tests
+
+After the cloud demo, this workflow is configured as a manual workflow using `workflow_dispatch` only. This prevents failed automatic deployments after the EKS cluster is destroyed for cost control.
 
 ---
 
@@ -1262,7 +1323,8 @@ kubeguard-devsecops-gitops-platform/
 │
 ├── .github/
 │   └── workflows/
-│       └── kubeguard-ci.yml
+│       ├── kubeguard-ci.yml
+│       └── kubeguard-deploy-eks.yml
 │
 ├── app/
 │   ├── Dockerfile
@@ -1339,6 +1401,7 @@ kubeguard-devsecops-gitops-platform/
 │   ├── eks-loadbalancer-service.png
 │   ├── eks-nodegroup-active.png
 │   ├── eks-nodes-ready.png
+│   ├── github-actions-eks-deploy-success.png
 │   ├── github-actions-kubeguard-ci-success.png
 │   ├── grafana-kubeguard-logs-dashboard.png
 │   ├── grafana-kubeguard-observability-dashboard.png
@@ -1368,7 +1431,6 @@ kubeguard-devsecops-gitops-platform/
 │   ├── terraform-eks-apply-success.png
 │   └── terraform-state-resources.png
 │
-├── video-script.txt
 ├── README.md
 └── .gitignore
 ```
@@ -1389,6 +1451,8 @@ This project demonstrates hands-on DevOps, DevSecOps, GitOps, SRE, cloud, and Ku
 * Exposing cloud workloads through an AWS LoadBalancer.
 * Creating AWS infrastructure using Terraform.
 * Managing Terraform state remotely with Amazon S3.
+* Using GitHub OIDC for secure AWS authentication from GitHub Actions.
+* Automating ECR image publishing and EKS deployment with GitHub Actions.
 * Configuring liveness and readiness probes.
 * Defining CPU and memory requests and limits.
 * Configuring HPA autoscaling.
@@ -1412,7 +1476,7 @@ This project demonstrates hands-on DevOps, DevSecOps, GitOps, SRE, cloud, and Ku
 
 ## Production Roadmap
 
-KubeGuard already demonstrates local Kubernetes operations, GitOps, observability, logging, security policies, CI quality gates, Amazon ECR image publishing, Terraform infrastructure, and Amazon EKS deployment.
+KubeGuard already demonstrates local Kubernetes operations, GitOps, observability, logging, security policies, CI quality gates, Amazon ECR image publishing, Terraform infrastructure, Amazon EKS deployment, and GitHub Actions EKS deployment automation.
 
 Future production improvements include:
 
@@ -1429,7 +1493,7 @@ Future production improvements include:
 * Add Kubernetes NetworkPolicies.
 * Add Pod Security Standards.
 * Add multi-environment GitOps structure for dev, staging, and production.
-* Add automated EKS deployment workflow through GitHub Actions.
+* Add multi-environment deployment approvals for dev, staging, and production.
 * Add pytest unit tests and CI test stages.
 * Add policy-as-code tests for Kubernetes manifests.
 
@@ -1444,6 +1508,8 @@ Future production improvements include:
 * Containers without CPU and memory requests and limits are blocked.
 * GitHub Actions uses automated security scanning.
 * Trivy scans both the filesystem and the container image.
+* GitHub Actions deploys to AWS using OIDC-based temporary credentials.
+* No long-lived AWS access keys are required in GitHub secrets for the EKS deployment workflow.
 * No secrets should be committed to the repository.
 * Test manifests used only for policy validation should not be committed as production manifests.
 * AWS root credentials should not be used for daily operations.
@@ -1577,13 +1643,15 @@ terraform destroy
 
 Before destroying, make sure all required screenshots and documentation have been captured.
 
+In this project, the EKS cluster, EC2 worker nodes, LoadBalancer, VPC resources, and Terraform-managed cloud infrastructure were destroyed after the demo to prevent ongoing AWS costs.
+
 ---
 
 ## CV Summary
 
 KubeGuard is a production-style DevSecOps and GitOps Kubernetes platform demonstrating Docker, Helm, Kubernetes, Amazon ECR, Amazon EKS, Terraform, Argo CD, Prometheus, Grafana, Loki, Promtail, Kyverno, GitHub Actions, and Trivy.
 
-The project proves hands-on experience with Kubernetes workload deployment, Helm packaging, GitOps synchronization, self-healing, AWS EKS cloud deployment, ECR image publishing, Terraform infrastructure provisioning, custom Prometheus metrics, Grafana dashboards, centralized logging, Prometheus alerting, incident simulation, Kyverno policy enforcement, HPA autoscaling, CI quality gates, and container security scanning.
+The project proves hands-on experience with Kubernetes workload deployment, Helm packaging, GitOps synchronization, self-healing, AWS EKS cloud deployment, ECR image publishing, Terraform infrastructure provisioning, GitHub Actions OIDC-based AWS deployment, custom Prometheus metrics, Grafana dashboards, centralized logging, Prometheus alerting, incident simulation, Kyverno policy enforcement, HPA autoscaling, CI quality gates, and container security scanning.
 
 ---
 
@@ -1592,6 +1660,7 @@ The project proves hands-on experience with Kubernetes workload deployment, Helm
 * Built a production-style DevSecOps Kubernetes platform using FastAPI, Docker, Helm, Amazon EKS, Amazon ECR, Terraform, Argo CD, Prometheus, Grafana, Loki, Kyverno, and GitHub Actions.
 * Provisioned AWS infrastructure with Terraform, including VPC, public subnets, IAM roles, Amazon EKS cluster, EKS managed node group, Amazon ECR repository, and S3 remote state backend.
 * Published the application Docker image to Amazon ECR using immutable Git commit SHA tags and deployed it to Amazon EKS using Helm.
+* Implemented a GitHub Actions deployment workflow using OIDC-based AWS authentication to build, push, and deploy container images to Amazon EKS without long-lived AWS secrets.
 * Exposed the EKS-hosted application publicly through an AWS LoadBalancer and verified health, readiness, config, and metrics endpoints.
 * Implemented GitOps deployment with Argo CD and Helm, enabling declarative synchronization and self-healing from a GitHub repository.
 * Exposed custom Prometheus metrics for request count, latency, and application health, then visualized them using Grafana dashboards.
