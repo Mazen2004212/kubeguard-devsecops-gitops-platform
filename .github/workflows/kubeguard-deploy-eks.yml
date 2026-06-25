@@ -2,13 +2,6 @@
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - "app/**"
-      - "helm/kubeguard-app/**"
-      - ".github/workflows/kubeguard-deploy-eks.yml"
 
 permissions:
   id-token: write
