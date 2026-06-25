@@ -4,6 +4,10 @@
 ![Docker](https://img.shields.io/badge/Docker-Containerization-2496ED?style=for-the-badge\&logo=docker\&logoColor=white)
 ![Helm](https://img.shields.io/badge/Helm-Package_Manager-0F1689?style=for-the-badge\&logo=helm\&logoColor=white)
 ![Argo CD](https://img.shields.io/badge/Argo_CD-GitOps-EF7B4D?style=for-the-badge\&logo=argo\&logoColor=white)
+![AWS](https://img.shields.io/badge/AWS-EKS_Cloud-FF9900?style=for-the-badge\&logo=amazonaws\&logoColor=white)
+![Amazon EKS](https://img.shields.io/badge/Amazon_EKS-Kubernetes-FF9900?style=for-the-badge\&logo=amazoneks\&logoColor=white)
+![Amazon ECR](https://img.shields.io/badge/Amazon_ECR-Container_Registry-FF9900?style=for-the-badge\&logo=amazonaws\&logoColor=white)
+![Terraform](https://img.shields.io/badge/Terraform-Infrastructure_as_Code-7B42BC?style=for-the-badge\&logo=terraform\&logoColor=white)
 ![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-E6522C?style=for-the-badge\&logo=prometheus\&logoColor=white)
 ![Grafana](https://img.shields.io/badge/Grafana-Dashboards-F46800?style=for-the-badge\&logo=grafana\&logoColor=white)
 ![Loki](https://img.shields.io/badge/Loki-Logging-F46800?style=for-the-badge\&logo=grafana\&logoColor=white)
@@ -13,9 +17,9 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-Demo_App-009688?style=for-the-badge\&logo=fastapi\&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-Backend-3776AB?style=for-the-badge\&logo=python\&logoColor=white)
 
-KubeGuard is a production-style DevSecOps and GitOps Kubernetes platform built with FastAPI, Docker, Helm, Kubernetes, Argo CD, Prometheus, Grafana, Loki, Promtail, Kyverno, GitHub Actions, and Trivy.
+KubeGuard is a production-style DevSecOps and GitOps Kubernetes platform built with FastAPI, Docker, Helm, Kubernetes, Argo CD, Prometheus, Grafana, Loki, Promtail, Kyverno, GitHub Actions, Trivy, Terraform, Amazon ECR, and Amazon EKS.
 
-The project demonstrates the complete operational lifecycle of a Kubernetes workload: containerization, Helm packaging, GitOps deployment, custom Prometheus metrics, Grafana dashboards, centralized logging, alerting, incident simulation, policy enforcement, HPA autoscaling, and CI quality gates.
+The project demonstrates the complete operational lifecycle of a Kubernetes workload: containerization, Helm packaging, GitOps deployment, AWS EKS cloud deployment, immutable container image publishing, custom Prometheus metrics, Grafana dashboards, centralized logging, alerting, incident simulation, policy enforcement, HPA autoscaling, Terraform infrastructure provisioning, and CI quality gates.
 
 ---
 
@@ -30,6 +34,8 @@ The project demonstrates the complete operational lifecycle of a Kubernetes work
 * [Application Endpoints](#application-endpoints)
 * [Docker Setup](#docker-setup)
 * [Helm Deployment](#helm-deployment)
+* [AWS EKS Cloud Deployment](#aws-eks-cloud-deployment)
+* [Horizontal Pod Autoscaling](#horizontal-pod-autoscaling)
 * [Prometheus Monitoring](#prometheus-monitoring)
 * [Grafana Dashboards](#grafana-dashboards)
 * [Prometheus Alerting](#prometheus-alerting)
@@ -38,11 +44,13 @@ The project demonstrates the complete operational lifecycle of a Kubernetes work
 * [Argo CD GitOps](#argo-cd-gitops)
 * [Loki and Promtail Logging](#loki-and-promtail-logging)
 * [GitHub Actions CI Quality Gates](#github-actions-ci-quality-gates)
+* [Terraform Infrastructure](#terraform-infrastructure)
 * [Project Structure](#project-structure)
 * [What This Project Demonstrates](#what-this-project-demonstrates)
 * [Production Roadmap](#production-roadmap)
 * [Security Notes](#security-notes)
 * [Useful Commands](#useful-commands)
+* [Cost Control](#cost-control)
 * [CV Summary](#cv-summary)
 
 ---
@@ -52,7 +60,7 @@ The project demonstrates the complete operational lifecycle of a Kubernetes work
 * Built a Kubernetes-ready FastAPI application with health, readiness, config, stress, random-error, and metrics endpoints.
 * Containerized the application using Docker.
 * Created a reusable Helm chart for Kubernetes deployment.
-* Deployed the application to Docker Desktop Kubernetes.
+* Deployed the application locally on Docker Desktop Kubernetes.
 * Added liveness and readiness probes for workload reliability.
 * Configured CPU and memory requests and limits.
 * Configured Horizontal Pod Autoscaler with 2 minimum replicas and 6 maximum replicas.
@@ -69,7 +77,15 @@ The project demonstrates the complete operational lifecycle of a Kubernetes work
 * Installed Loki and Promtail for centralized Kubernetes logs.
 * Added a Grafana logs dashboard for KubeGuard application logs.
 * Added GitHub Actions CI workflow for Helm linting, template rendering, Docker build, and Trivy scans.
-* Added proof screenshots for monitoring, alerting, logging, GitOps, security policies, CI quality gates, and Kubernetes operations.
+* Created an Amazon ECR repository for the KubeGuard application image.
+* Built and pushed the Docker image to Amazon ECR using an immutable Git commit SHA tag.
+* Provisioned AWS infrastructure using Terraform.
+* Created an Amazon EKS cluster using Terraform.
+* Created an EKS managed node group using Free Tier eligible worker nodes.
+* Deployed KubeGuard to Amazon EKS using Helm and the ECR image.
+* Exposed KubeGuard publicly using an AWS LoadBalancer service.
+* Verified health, readiness, config, metrics, HPA, pods, services, and nodes on EKS.
+* Added proof screenshots for local Kubernetes, AWS EKS, ECR, Terraform, monitoring, alerting, logging, GitOps, security policies, CI quality gates, and Kubernetes operations.
 
 ---
 
@@ -114,6 +130,62 @@ Kubernetes Cluster
     |-- Loki Logs Dashboard
     |
     |-- Kyverno Security Policies
+```
+
+### AWS Cloud Deployment Architecture
+
+```text
+Developer Workstation
+    |
+    | docker build
+    | docker tag
+    | docker push
+    v
+Amazon ECR
+    |
+    | kubeguard-demo-app:<git-sha>
+    v
+Amazon EKS
+    |
+    |-- KubeGuard Namespace
+    |-- KubeGuard Deployment
+    |-- KubeGuard Service - LoadBalancer
+    |-- HPA
+    |-- Worker Nodes
+    |
+    v
+AWS LoadBalancer
+    |
+    v
+Public HTTP Access
+    |
+    |-- /health
+    |-- /ready
+    |-- /config
+    |-- /metrics
+```
+
+### Terraform AWS Infrastructure Architecture
+
+```text
+Terraform
+    |
+    | Remote backend
+    v
+S3 Terraform State Bucket
+    |
+    v
+AWS Infrastructure
+    |
+    |-- VPC
+    |-- Public Subnets
+    |-- Internet Gateway
+    |-- Route Table
+    |-- IAM Role for EKS Cluster
+    |-- IAM Role for EKS Worker Nodes
+    |-- Amazon ECR Repository
+    |-- Amazon EKS Cluster
+    |-- EKS Managed Node Group
 ```
 
 ### Observability Architecture
@@ -173,45 +245,53 @@ Allowed or Denied Workload
 
 ## Tech Stack
 
-| Layer                | Technology                                             |
-| -------------------- | ------------------------------------------------------ |
-| Demo Application     | Python, FastAPI, Uvicorn                               |
-| Metrics              | prometheus-client                                      |
-| Containerization     | Docker                                                 |
-| Kubernetes Packaging | Helm                                                   |
-| Orchestration        | Kubernetes, Docker Desktop Kubernetes                  |
-| Autoscaling          | Horizontal Pod Autoscaler                              |
-| GitOps               | Argo CD                                                |
-| Monitoring           | Prometheus, Prometheus Operator, kube-prometheus-stack |
-| Dashboards           | Grafana                                                |
-| Logging              | Loki, Promtail                                         |
-| Alerting             | PrometheusRule, Alertmanager                           |
-| Policy Enforcement   | Kyverno                                                |
-| CI Quality Gates     | GitHub Actions                                         |
-| Security Scanning    | Trivy                                                  |
-| Version Control      | Git, GitHub                                            |
+| Layer                  | Technology                                             |
+| ---------------------- | ------------------------------------------------------ |
+| Demo Application       | Python, FastAPI, Uvicorn                               |
+| Metrics                | prometheus-client                                      |
+| Containerization       | Docker                                                 |
+| Container Registry     | Amazon ECR                                             |
+| Kubernetes Packaging   | Helm                                                   |
+| Local Orchestration    | Docker Desktop Kubernetes                              |
+| Cloud Orchestration    | Amazon EKS                                             |
+| Infrastructure as Code | Terraform                                              |
+| Terraform State        | Amazon S3 remote backend                               |
+| Autoscaling            | Horizontal Pod Autoscaler                              |
+| GitOps                 | Argo CD                                                |
+| Monitoring             | Prometheus, Prometheus Operator, kube-prometheus-stack |
+| Dashboards             | Grafana                                                |
+| Logging                | Loki, Promtail                                         |
+| Alerting               | PrometheusRule, Alertmanager                           |
+| Policy Enforcement     | Kyverno                                                |
+| CI Quality Gates       | GitHub Actions                                         |
+| Security Scanning      | Trivy                                                  |
+| Version Control        | Git, GitHub                                            |
 
 ---
 
 ## Tools and Technologies
 
-| Category             | Tools                                          |
-| -------------------- | ---------------------------------------------- |
-| Application Runtime  | Python, FastAPI, Uvicorn                       |
-| Containerization     | Docker                                         |
-| Kubernetes           | Deployments, Services, HPA, Probes, Namespaces |
-| Package Management   | Helm                                           |
-| GitOps Delivery      | Argo CD                                        |
-| Metrics Collection   | Prometheus, ServiceMonitor                     |
-| Metrics Dashboarding | Grafana                                        |
-| Centralized Logging  | Loki, Promtail                                 |
-| Log Querying         | LogQL                                          |
-| Alerting             | PrometheusRule, Alertmanager                   |
-| Kubernetes Security  | Kyverno ClusterPolicy                          |
-| CI/CD                | GitHub Actions                                 |
-| Security Scanning    | Trivy                                          |
-| Local Cluster        | Docker Desktop Kubernetes                      |
-| CLI Tools            | kubectl, helm, docker, git                     |
+| Category               | Tools                                              |
+| ---------------------- | -------------------------------------------------- |
+| Application Runtime    | Python, FastAPI, Uvicorn                           |
+| Containerization       | Docker                                             |
+| Container Registry     | Amazon ECR                                         |
+| Kubernetes             | Deployments, Services, HPA, Probes, Namespaces     |
+| Cloud Kubernetes       | Amazon EKS                                         |
+| Package Management     | Helm                                               |
+| Infrastructure as Code | Terraform                                          |
+| Remote State           | Amazon S3                                          |
+| GitOps Delivery        | Argo CD                                            |
+| Metrics Collection     | Prometheus, ServiceMonitor                         |
+| Metrics Dashboarding   | Grafana                                            |
+| Centralized Logging    | Loki, Promtail                                     |
+| Log Querying           | LogQL                                              |
+| Alerting               | PrometheusRule, Alertmanager                       |
+| Kubernetes Security    | Kyverno ClusterPolicy                              |
+| CI/CD                  | GitHub Actions                                     |
+| Security Scanning      | Trivy                                              |
+| Local Cluster          | Docker Desktop Kubernetes                          |
+| CLI Tools              | kubectl, helm, docker, git, AWS CLI, Terraform CLI |
 
 ---
 
@@ -238,6 +318,66 @@ Allowed or Denied Workload
 #### KubeGuard Pods Recovered After Incident
 
 ![KubeGuard Pods Recovered](screenshots/kubeguard-pods-recovered.png)
+
+---
+
+### AWS EKS Cloud Deployment
+
+#### Amazon ECR Image Pushed
+
+![ECR KubeGuard Image Pushed](screenshots/ecr-kubeguard-image-pushed.png)
+
+#### AWS Free Tier Instance Types
+
+![AWS Free Tier Instance Types](screenshots/aws-free-tier-instance-types.png)
+
+#### Terraform EKS Apply Success
+
+![Terraform EKS Apply Success](screenshots/terraform-eks-apply-success.png)
+
+#### Terraform State Resources
+
+![Terraform State Resources](screenshots/terraform-state-resources.png)
+
+#### EKS Cluster Active
+
+![EKS Cluster Active](screenshots/eks-cluster-active.png)
+
+#### EKS Node Group Active
+
+![EKS Node Group Active](screenshots/eks-nodegroup-active.png)
+
+#### EKS Nodes Ready
+
+![EKS Nodes Ready](screenshots/eks-nodes-ready.png)
+
+#### KubeGuard Helm Deployment on EKS
+
+![EKS KubeGuard Helm Deploy](screenshots/eks-kubeguard-helm-deploy.png)
+
+#### KubeGuard Pods Running on EKS
+
+![EKS KubeGuard Pods Running](screenshots/eks-kubeguard-pods-running.png)
+
+#### AWS LoadBalancer Service
+
+![EKS LoadBalancer Service](screenshots/eks-loadbalancer-service.png)
+
+#### KubeGuard Health Check through LoadBalancer
+
+![EKS KubeGuard App Health LoadBalancer](screenshots/eks-kubeguard-app-health-loadbalancer.png)
+
+#### KubeGuard Resources Running on EKS
+
+![EKS KubeGuard Resources Running](screenshots/eks-kubeguard-resources-running.png)
+
+#### KubeGuard HPA Metrics on EKS
+
+![EKS KubeGuard HPA Metrics](screenshots/eks-kubeguard-hpa-metrics.png)
+
+#### Live LoadBalancer Test
+
+![EKS KubeGuard Live LoadBalancer Test](screenshots/eks-kubeguard-live-loadbalancer-test.png)
 
 ---
 
@@ -363,7 +503,7 @@ Allowed or Denied Workload
 
 ## Application Features
 
-KubeGuard provides a lightweight application designed for DevOps, SRE, and observability demonstrations.
+KubeGuard provides a lightweight application designed for DevOps, SRE, DevSecOps, GitOps, Kubernetes, and observability demonstrations.
 
 | Feature               | Description                                              |
 | --------------------- | -------------------------------------------------------- |
@@ -376,6 +516,7 @@ KubeGuard provides a lightweight application designed for DevOps, SRE, and obser
 | Request metrics       | Tracks request count, status code, endpoint, and latency |
 | Kubernetes probes     | Uses liveness and readiness probes                       |
 | Autoscaling           | HPA scales pods based on CPU utilization                 |
+| Cloud deployment      | Runs on Amazon EKS using an image pulled from Amazon ECR |
 
 ---
 
@@ -395,7 +536,7 @@ KubeGuard provides a lightweight application designed for DevOps, SRE, and obser
 
 ## Docker Setup
 
-### Build Docker Image
+### Build Docker Image Locally
 
 ```powershell
 docker build -t kubeguard-demo-app:local ./app
@@ -434,7 +575,7 @@ helm lint helm\kubeguard-app
 helm template kubeguard-app helm\kubeguard-app
 ```
 
-### Deploy KubeGuard
+### Deploy KubeGuard Locally
 
 ```powershell
 helm upgrade --install kubeguard-app helm\kubeguard-app -n kubeguard --create-namespace
@@ -444,6 +585,103 @@ helm upgrade --install kubeguard-app helm\kubeguard-app -n kubeguard --create-na
 
 ```powershell
 kubectl get all -n kubeguard
+```
+
+---
+
+## AWS EKS Cloud Deployment
+
+KubeGuard was deployed to **Amazon EKS** using Terraform-managed AWS infrastructure and a real container image hosted on **Amazon ECR**.
+
+This upgrade moves the project from a local-only Kubernetes demo to a cloud-ready DevSecOps platform.
+
+### Cloud Deployment Highlights
+
+* Provisioned AWS infrastructure using Terraform.
+* Created an Amazon EKS cluster.
+* Created an EKS managed node group.
+* Used Free Tier eligible EC2 instance types for worker nodes.
+* Created and used an Amazon ECR repository.
+* Built and pushed the KubeGuard Docker image to ECR.
+* Tagged the image using an immutable Git commit SHA.
+* Deployed KubeGuard to EKS using Helm.
+* Pulled the application image from Amazon ECR.
+* Exposed the application publicly using an AWS LoadBalancer service.
+* Verified application health, readiness, config, and metrics through the LoadBalancer.
+* Verified Kubernetes nodes, pods, services, HPA, and Terraform state.
+
+### ECR Image Registry
+
+The KubeGuard application image was built locally, tagged with the Git commit SHA, and pushed to Amazon ECR.
+
+```text
+766696030212.dkr.ecr.us-east-1.amazonaws.com/kubeguard-demo-app:bddda69
+```
+
+Separate Helm values files are used for different environments:
+
+```text
+helm/kubeguard-app/values.yaml
+helm/kubeguard-app/values-ecr.yaml
+helm/kubeguard-app/values-eks.yaml
+```
+
+This keeps the local Docker Desktop Kubernetes configuration separate from the AWS EKS deployment configuration.
+
+### Build, Tag, and Push to ECR
+
+```powershell
+$REGION="us-east-1"
+$ACCOUNT_ID=(aws sts get-caller-identity --query Account --output text).Trim()
+$ECR_REPO="kubeguard-demo-app"
+$IMAGE_TAG=(git rev-parse --short HEAD).Trim()
+$ECR_URI="$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECR_REPO"
+
+aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin "$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com"
+
+docker build -t kubeguard-demo-app:$IMAGE_TAG ./app
+
+docker tag kubeguard-demo-app:$IMAGE_TAG "${ECR_URI}:$IMAGE_TAG"
+docker tag kubeguard-demo-app:$IMAGE_TAG "${ECR_URI}:latest"
+
+docker push "${ECR_URI}:$IMAGE_TAG"
+docker push "${ECR_URI}:latest"
+```
+
+### Configure kubectl for EKS
+
+```powershell
+aws eks update-kubeconfig --region us-east-1 --name kubeguard-eks
+kubectl get nodes
+```
+
+### Deploy KubeGuard to EKS
+
+```powershell
+helm upgrade --install kubeguard-app helm\kubeguard-app `
+  -n kubeguard `
+  --create-namespace `
+  -f helm\kubeguard-app\values-eks.yaml
+```
+
+### Verify EKS Deployment
+
+```powershell
+kubectl get nodes
+kubectl get pods -n kubeguard
+kubectl get svc -n kubeguard
+kubectl get hpa -n kubeguard
+```
+
+### Access KubeGuard through AWS LoadBalancer
+
+```powershell
+$LB = kubectl get svc kubeguard-app -n kubeguard -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"
+
+curl.exe http://$LB/health
+curl.exe http://$LB/ready
+curl.exe http://$LB/config
+curl.exe http://$LB/metrics
 ```
 
 ---
@@ -470,6 +708,19 @@ Generate load:
 ```powershell
 for ($i=1; $i -le 50; $i++) {
   curl.exe -s http://localhost:8000/stress | Out-Null
+  Start-Sleep -Milliseconds 100
+}
+```
+
+For EKS LoadBalancer traffic:
+
+```powershell
+$LB = kubectl get svc kubeguard-app -n kubeguard -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"
+
+for ($i=1; $i -le 100; $i++) {
+  curl.exe -s http://$LB/health | Out-Null
+  curl.exe -s http://$LB/ready | Out-Null
+  curl.exe -s http://$LB/config | Out-Null
   Start-Sleep -Milliseconds 100
 }
 ```
@@ -930,6 +1181,76 @@ The pipeline provides CI quality gates for both Kubernetes manifests and contain
 
 ---
 
+## Terraform Infrastructure
+
+Terraform is used to provision the AWS infrastructure required for the EKS deployment.
+
+Terraform files are stored in:
+
+```text
+terraform/
+```
+
+### Terraform Components
+
+| File           | Purpose                                                                      |
+| -------------- | ---------------------------------------------------------------------------- |
+| `backend.tf`   | Configures the S3 remote backend and native state locking                    |
+| `versions.tf`  | Defines Terraform and provider versions                                      |
+| `provider.tf`  | Configures the AWS provider                                                  |
+| `variables.tf` | Stores reusable input variables                                              |
+| `locals.tf`    | Stores naming and tagging logic                                              |
+| `vpc.tf`       | Creates VPC, public subnets, internet gateway, route table, and associations |
+| `iam.tf`       | Creates IAM roles and policy attachments for EKS                             |
+| `ecr.tf`       | Manages the KubeGuard ECR repository                                         |
+| `eks.tf`       | Creates the EKS cluster and managed node group                               |
+| `outputs.tf`   | Exposes useful infrastructure outputs                                        |
+| `.gitignore`   | Excludes Terraform state files and local artifacts                           |
+
+### Terraform Remote State
+
+Terraform uses an encrypted Amazon S3 backend for remote state storage.
+
+The backend includes:
+
+* S3 bucket for Terraform state storage
+* Encryption enabled
+* Versioning enabled
+* Public access blocked
+* Native Terraform S3 lockfile support
+
+### Terraform Workflow
+
+```powershell
+cd terraform
+
+terraform init
+terraform fmt
+terraform validate
+terraform plan -out=tfplan
+terraform apply tfplan
+```
+
+### Terraform Outputs
+
+After applying the infrastructure, Terraform outputs:
+
+* AWS region
+* EKS cluster name
+* EKS cluster endpoint
+* ECR repository URL
+* kubectl update-kubeconfig command
+* EKS node IAM role name
+
+### Configure kubectl for EKS
+
+```powershell
+aws eks update-kubeconfig --region us-east-1 --name kubeguard-eks
+kubectl get nodes
+```
+
+---
+
 ## Project Structure
 
 ```text
@@ -949,6 +1270,8 @@ kubeguard-devsecops-gitops-platform/
 │   └── kubeguard-app/
 │       ├── Chart.yaml
 │       ├── values.yaml
+│       ├── values-ecr.yaml
+│       ├── values-eks.yaml
 │       └── templates/
 │           ├── deployment.yaml
 │           ├── service.yaml
@@ -982,10 +1305,36 @@ kubeguard-devsecops-gitops-platform/
 │       ├── high-error-rate-runbook.md
 │       └── high-latency-runbook.md
 │
+├── terraform/
+│   ├── backend.tf
+│   ├── versions.tf
+│   ├── provider.tf
+│   ├── variables.tf
+│   ├── locals.tf
+│   ├── vpc.tf
+│   ├── iam.tf
+│   ├── ecr.tf
+│   ├── eks.tf
+│   ├── outputs.tf
+│   ├── .terraform.lock.hcl
+│   └── .gitignore
+│
 ├── screenshots/
 │   ├── argocd-kubeguard-app-synced-healthy.png
 │   ├── argocd-self-healing-restored-replicas.png
 │   ├── argocd-ui-login-success.png
+│   ├── aws-free-tier-instance-types.png
+│   ├── ecr-kubeguard-image-pushed.png
+│   ├── eks-cluster-active.png
+│   ├── eks-kubeguard-app-health-loadbalancer.png
+│   ├── eks-kubeguard-helm-deploy.png
+│   ├── eks-kubeguard-hpa-metrics.png
+│   ├── eks-kubeguard-live-loadbalancer-test.png
+│   ├── eks-kubeguard-pods-running.png
+│   ├── eks-kubeguard-resources-running.png
+│   ├── eks-loadbalancer-service.png
+│   ├── eks-nodegroup-active.png
+│   ├── eks-nodes-ready.png
 │   ├── github-actions-kubeguard-ci-success.png
 │   ├── grafana-kubeguard-logs-dashboard.png
 │   ├── grafana-kubeguard-observability-dashboard.png
@@ -1011,8 +1360,11 @@ kubeguard-devsecops-gitops-platform/
 │   ├── prometheus-kubeguard-error-rate-pending.png
 │   ├── prometheus-kubeguard-health-metric.png
 │   ├── prometheus-kubeguard-latency-alert-firing.png
-│   └── prometheus-kubeguard-latency-alert-pending.png
+│   ├── prometheus-kubeguard-latency-alert-pending.png
+│   ├── terraform-eks-apply-success.png
+│   └── terraform-state-resources.png
 │
+├── video-script.txt
 ├── README.md
 └── .gitignore
 ```
@@ -1021,12 +1373,18 @@ kubeguard-devsecops-gitops-platform/
 
 ## What This Project Demonstrates
 
-This project demonstrates hands-on DevOps, DevSecOps, GitOps, SRE, and Kubernetes operations skills, including:
+This project demonstrates hands-on DevOps, DevSecOps, GitOps, SRE, cloud, and Kubernetes operations skills, including:
 
 * Building a containerized FastAPI application.
 * Creating production-style Docker images.
 * Packaging Kubernetes workloads using Helm.
 * Deploying and managing workloads on Kubernetes.
+* Deploying workloads to Amazon EKS.
+* Publishing application images to Amazon ECR.
+* Using immutable Git commit SHA image tags.
+* Exposing cloud workloads through an AWS LoadBalancer.
+* Creating AWS infrastructure using Terraform.
+* Managing Terraform state remotely with Amazon S3.
 * Configuring liveness and readiness probes.
 * Defining CPU and memory requests and limits.
 * Configuring HPA autoscaling.
@@ -1050,39 +1408,44 @@ This project demonstrates hands-on DevOps, DevSecOps, GitOps, SRE, and Kubernete
 
 ## Production Roadmap
 
-The current project is a local Kubernetes DevSecOps platform designed for practical demonstration and portfolio validation.
+KubeGuard already demonstrates local Kubernetes operations, GitOps, observability, logging, security policies, CI quality gates, Amazon ECR image publishing, Terraform infrastructure, and Amazon EKS deployment.
 
 Future production improvements include:
 
-* Deploy the platform to AWS EKS.
-* Push application images to Amazon ECR.
-* Replace local image tags with immutable commit SHA tags.
-* Add AWS Load Balancer Controller.
+* Add AWS Load Balancer Controller for ALB-based ingress.
 * Add Route53 DNS and ACM TLS certificates.
-* Add external Alertmanager notification channels such as Slack or email.
+* Add HTTPS termination.
+* Add external Alertmanager notification channels such as Slack, email, or Microsoft Teams.
 * Add sealed secrets or external secret management.
 * Add image signing with Cosign.
 * Add SBOM generation.
 * Add OpenTelemetry tracing.
 * Add resource dashboards for node and namespace-level usage.
 * Add backup and restore procedures.
-* Add NetworkPolicies.
+* Add Kubernetes NetworkPolicies.
 * Add Pod Security Standards.
 * Add multi-environment GitOps structure for dev, staging, and production.
+* Add automated EKS deployment workflow through GitHub Actions.
+* Add pytest unit tests and CI test stages.
+* Add policy-as-code tests for Kubernetes manifests.
 
 ---
 
 ## Security Notes
 
 * Kyverno enforces Kubernetes admission policies in the `kubeguard` namespace.
-* Containers using the `latest` image tag are blocked.
+* Containers using the `latest` image tag are blocked in the Kyverno policy demo.
 * Privileged containers are blocked.
 * Pods missing required labels are blocked.
 * Containers without CPU and memory requests and limits are blocked.
-* GitHub Actions uses pinned actions and automated security scanning.
+* GitHub Actions uses automated security scanning.
 * Trivy scans both the filesystem and the container image.
 * No secrets should be committed to the repository.
 * Test manifests used only for policy validation should not be committed as production manifests.
+* AWS root credentials should not be used for daily operations.
+* For production usage, IAM users or IAM roles with least-privilege permissions should be used.
+* Terraform state files should not be committed to the repository.
+* AWS access keys must never be committed.
 
 ---
 
@@ -1094,6 +1457,26 @@ Future production improvements include:
 kubectl get pods -n kubeguard
 kubectl get svc -n kubeguard
 kubectl get hpa -n kubeguard
+```
+
+### Check EKS
+
+```powershell
+aws eks describe-cluster --name kubeguard-eks --region us-east-1 --query "cluster.status" --output text
+
+aws eks describe-nodegroup `
+  --cluster-name kubeguard-eks `
+  --nodegroup-name kubeguard-dev-node-group `
+  --region us-east-1 `
+  --query "nodegroup.{status:status,health:health.issues}" `
+  --output json
+```
+
+### Configure kubectl for EKS
+
+```powershell
+aws eks update-kubeconfig --region us-east-1 --name kubeguard-eks
+kubectl get nodes
 ```
 
 ### Check Monitoring
@@ -1155,34 +1538,57 @@ kubectl port-forward svc/argocd-server 8080:443 -n argocd
 kubectl port-forward svc/logging-loki 3100:3100 -n logging
 ```
 
+### Check Terraform State
+
+```powershell
+cd terraform
+terraform state list
+terraform output
+```
+
 ---
 
 ## Cost Control
 
-This project was tested locally using Docker Desktop Kubernetes, so it does not require running paid cloud resources.
+This project includes both a local Kubernetes environment and an AWS EKS cloud deployment.
 
-If extended to AWS EKS in the future, cost control should include:
+Local Docker Desktop Kubernetes does not require paid cloud resources.
 
-* Destroying EKS clusters after demos.
-* Avoiding always-on LoadBalancers when not needed.
-* Using small node groups for testing.
-* Monitoring AWS billing.
-* Cleaning unused ECR images.
-* Using Terraform destroy after cloud demos.
+The AWS EKS environment can generate ongoing AWS charges while running.
+
+Resources that may generate cost include:
+
+* Amazon EKS cluster
+* EC2 worker nodes
+* AWS LoadBalancer
+* S3 Terraform state bucket
+* ECR image storage
+
+To stop AWS costs after the demo, destroy the Terraform-managed infrastructure:
+
+```powershell
+cd terraform
+terraform destroy
+```
+
+Before destroying, make sure all required screenshots and documentation have been captured.
 
 ---
 
 ## CV Summary
 
-KubeGuard is a production-style DevSecOps and GitOps Kubernetes platform demonstrating Docker, Helm, Kubernetes, Argo CD, Prometheus, Grafana, Loki, Promtail, Kyverno, GitHub Actions, and Trivy.
+KubeGuard is a production-style DevSecOps and GitOps Kubernetes platform demonstrating Docker, Helm, Kubernetes, Amazon ECR, Amazon EKS, Terraform, Argo CD, Prometheus, Grafana, Loki, Promtail, Kyverno, GitHub Actions, and Trivy.
 
-The project proves hands-on experience with Kubernetes workload deployment, Helm packaging, GitOps synchronization, self-healing, custom Prometheus metrics, Grafana dashboards, centralized logging, Prometheus alerting, incident simulation, Kyverno policy enforcement, HPA autoscaling, CI quality gates, and container security scanning.
+The project proves hands-on experience with Kubernetes workload deployment, Helm packaging, GitOps synchronization, self-healing, AWS EKS cloud deployment, ECR image publishing, Terraform infrastructure provisioning, custom Prometheus metrics, Grafana dashboards, centralized logging, Prometheus alerting, incident simulation, Kyverno policy enforcement, HPA autoscaling, CI quality gates, and container security scanning.
 
 ---
 
 ## Resume Bullet Points
 
-* Built a production-style DevSecOps Kubernetes platform using FastAPI, Docker, Helm, Argo CD, Prometheus, Grafana, Loki, Kyverno, and GitHub Actions.
+* Built a production-style DevSecOps Kubernetes platform using FastAPI, Docker, Helm, Amazon EKS, Amazon ECR, Terraform, Argo CD, Prometheus, Grafana, Loki, Kyverno, and GitHub Actions.
+* Provisioned AWS infrastructure with Terraform, including VPC, public subnets, IAM roles, Amazon EKS cluster, EKS managed node group, Amazon ECR repository, and S3 remote state backend.
+* Published the application Docker image to Amazon ECR using immutable Git commit SHA tags and deployed it to Amazon EKS using Helm.
+* Exposed the EKS-hosted application publicly through an AWS LoadBalancer and verified health, readiness, config, and metrics endpoints.
 * Implemented GitOps deployment with Argo CD and Helm, enabling declarative synchronization and self-healing from a GitHub repository.
 * Exposed custom Prometheus metrics for request count, latency, and application health, then visualized them using Grafana dashboards.
 * Configured Loki and Promtail for centralized Kubernetes log collection and created a Grafana logs dashboard for application log analysis.
