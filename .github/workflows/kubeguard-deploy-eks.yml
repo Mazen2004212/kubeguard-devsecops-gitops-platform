@@ -1,0 +1,120 @@
+﻿name: KubeGuard Deploy to AWS EKS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "app/**"
+      - "helm/kubeguard-app/**"
+      - ".github/workflows/kubeguard-deploy-eks.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: "766696030212"
+  AWS_ROLE_ARN: arn:aws:iam::766696030212:role/kubeguard-github-actions-deploy-role
+  ECR_REPOSITORY: kubeguard-demo-app
+  EKS_CLUSTER_NAME: kubeguard-eks
+  K8S_NAMESPACE: kubeguard
+  HELM_RELEASE: kubeguard-app
+
+jobs:
+  deploy:
+    name: Build, Push, and Deploy to EKS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region "$AWS_REGION" | docker login \
+            --username AWS \
+            --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+
+      - name: Build Docker image
+        run: |
+          IMAGE_TAG="${GITHUB_SHA::7}"
+          ECR_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY"
+
+          echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_ENV"
+          echo "ECR_URI=$ECR_URI" >> "$GITHUB_ENV"
+
+          docker build -t "$ECR_REPOSITORY:$IMAGE_TAG" ./app
+          docker tag "$ECR_REPOSITORY:$IMAGE_TAG" "$ECR_URI:$IMAGE_TAG"
+          docker tag "$ECR_REPOSITORY:$IMAGE_TAG" "$ECR_URI:latest"
+
+      - name: Push Docker image to Amazon ECR
+        run: |
+          docker push "$ECR_URI:$IMAGE_TAG"
+          docker push "$ECR_URI:latest"
+
+      - name: Validate Helm chart
+        run: helm lint helm/kubeguard-app
+
+      - name: Configure kubectl for EKS
+        run: |
+          aws eks update-kubeconfig \
+            --region "$AWS_REGION" \
+            --name "$EKS_CLUSTER_NAME"
+
+      - name: Deploy to EKS using Helm
+        run: |
+          helm upgrade --install "$HELM_RELEASE" helm/kubeguard-app \
+            --namespace "$K8S_NAMESPACE" \
+            --create-namespace \
+            -f helm/kubeguard-app/values-eks.yaml \
+            --set image.repository="$ECR_URI" \
+            --set image.tag="$IMAGE_TAG" \
+            --set image.pullPolicy=IfNotPresent \
+            --wait \
+            --timeout 5m
+
+      - name: Verify Kubernetes rollout
+        run: |
+          kubectl rollout status deployment/kubeguard-app -n "$K8S_NAMESPACE" --timeout=180s
+          kubectl get pods -n "$K8S_NAMESPACE" -o wide
+          kubectl get svc -n "$K8S_NAMESPACE"
+          kubectl get hpa -n "$K8S_NAMESPACE"
+
+      - name: Smoke test AWS LoadBalancer
+        run: |
+          LB_HOST="$(kubectl get svc kubeguard-app -n "$K8S_NAMESPACE" -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
+
+          echo "LoadBalancer hostname: $LB_HOST"
+
+          for i in {1..12}; do
+            if curl -fsS "http://$LB_HOST/health"; then
+              echo "Health check passed"
+              curl -fsS "http://$LB_HOST/ready"
+              curl -fsS "http://$LB_HOST/config"
+              exit 0
+            fi
+
+            echo "Waiting for LoadBalancer to become ready..."
+            sleep 10
+          done
+
+          echo "LoadBalancer smoke test failed"
+          exit 1
